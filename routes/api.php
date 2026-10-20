@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CustomFieldController;
 use App\Http\Controllers\Api\FunctionController;
 use App\Http\Controllers\Api\ModuleController;
 use App\Http\Controllers\Api\TenantController;
@@ -40,5 +41,15 @@ Route::prefix('v1')->group(function () {
         Route::get('/modules/{id}/functions', [ModuleController::class, 'functions']);
         Route::post('/modules/{id}/install', [ModuleController::class, 'install']);
         Route::post('/modules/{id}/uninstall', [ModuleController::class, 'uninstall']);
+
+        // Custom fields
+        Route::get('/custom-fields', [CustomFieldController::class, 'index']);
+        Route::get('/custom-fields/{id}', [CustomFieldController::class, 'show']);
+        Route::post('/custom-fields', [CustomFieldController::class, 'store']);
+        Route::patch('/custom-fields/{id}', [CustomFieldController::class, 'update']);
+        Route::delete('/custom-fields/{id}', [CustomFieldController::class, 'destroy']);
+
+        // Entity schema
+        Route::get('/entities/{entity}/schema', [CustomFieldController::class, 'schema']);
     });
 });
