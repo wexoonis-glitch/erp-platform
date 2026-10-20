@@ -6,7 +6,9 @@ use App\Events\EventBus;
 use App\Events\Listeners\LogTenantCreated;
 use App\Extensions\ExtensionDispatcher;
 use App\Registry\FunctionRegistryService;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,5 +37,11 @@ class AppServiceProvider extends ServiceProvider
 
         // tenant.created → log'a yaz
         $bus->registerListener('tenant.created', LogTenantCreated::class);
+
+        // Livewire update route'una tenant middleware ekle
+        Livewire::setUpdateRoute(function ($handle) {
+            return Route::post('/livewire/update', $handle)
+                ->middleware(['web', 'web.auth']);
+        });
     }
 }

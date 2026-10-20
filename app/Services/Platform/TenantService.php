@@ -161,6 +161,17 @@ final class TenantService
         return $this->setStatus($tenantId, 'active');
     }
 
+
+
+    /**
+     * PLT-TEN-0003 — Tenant arşivleme (soft delete).
+     * Yalnızca superadmin.
+     */
+    public function archive(string $tenantId): Tenant
+    {
+        return $this->setStatus($tenantId, 'archived');
+    }
+
     private function setStatus(string $tenantId, string $status): Tenant
     {
         if (!TenantContext::isSuperadmin()) {

@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant'      => \App\Http\Middleware\TenantMiddleware::class,
             'auth.tenant' => \App\Http\Middleware\AuthenticateWithTenant::class,
+            'web.auth'    => \App\Http\Middleware\WebSessionAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
