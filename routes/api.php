@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomFieldController;
+use App\Http\Controllers\Api\CustomObjectController;
 use App\Http\Controllers\Api\FunctionController;
 use App\Http\Controllers\Api\ModuleController;
 use App\Http\Controllers\Api\TenantController;
@@ -49,7 +50,21 @@ Route::prefix('v1')->group(function () {
         Route::patch('/custom-fields/{id}', [CustomFieldController::class, 'update']);
         Route::delete('/custom-fields/{id}', [CustomFieldController::class, 'destroy']);
 
-        // Entity schema
+        // Entity schema (built-in + custom fields)
         Route::get('/entities/{entity}/schema', [CustomFieldController::class, 'schema']);
+
+        // Custom objects
+        Route::get('/custom-objects', [CustomObjectController::class, 'index']);
+        Route::get('/custom-objects/{id}', [CustomObjectController::class, 'show']);
+        Route::post('/custom-objects', [CustomObjectController::class, 'store']);
+        Route::patch('/custom-objects/{id}', [CustomObjectController::class, 'update']);
+        Route::delete('/custom-objects/{id}', [CustomObjectController::class, 'destroy']);
+
+        // Custom object records
+        Route::get('/custom-objects/{id}/records', [CustomObjectController::class, 'listRecords']);
+        Route::post('/custom-objects/{id}/records', [CustomObjectController::class, 'createRecord']);
+        Route::get('/custom-objects/{id}/records/{recordId}', [CustomObjectController::class, 'showRecord']);
+        Route::patch('/custom-objects/{id}/records/{recordId}', [CustomObjectController::class, 'updateRecord']);
+        Route::delete('/custom-objects/{id}/records/{recordId}', [CustomObjectController::class, 'deleteRecord']);
     });
 });

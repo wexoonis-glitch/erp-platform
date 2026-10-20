@@ -14,10 +14,11 @@ class CustomObjectData extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['tenant_id', 'object_id', 'data', 'created_at'];
+    protected $fillable = ['tenant_id', 'object_id', 'data', 'created_at', 'updated_at'];
 
     protected $casts = [
         'data'       => 'array',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 }
