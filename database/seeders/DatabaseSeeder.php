@@ -18,7 +18,9 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
  $this->call([
-        PltFunctionsSeeder::class,
+        
+	FinFunctionsSeeder::class,
+	PltFunctionsSeeder::class,
     ]);
 
         User::factory()->create([
