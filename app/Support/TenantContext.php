@@ -9,16 +9,11 @@ final class TenantContext
     private static ?string $tenantId = null;
     private static bool $superadmin = false;
 
-    /**
-     * PostgreSQL oturum değişkenlerini set eder.
-     * RLS politikaları bu değişkenlere göre filtre uygular.
-     */
     public static function bind(string $tenantId, bool $superadmin = false): void
     {
         self::$tenantId = $tenantId;
         self::$superadmin = $superadmin;
 
-        // set_config(name, value, is_local) — is_local=false => oturum boyunca geçerli
         DB::selectOne("SELECT set_config('app.tenant_id', ?, false)", [$tenantId]);
         DB::selectOne("SELECT set_config('app.is_superadmin', ?, false)", [$superadmin ? 'true' : 'false']);
     }
@@ -43,16 +38,26 @@ final class TenantContext
     }
 
     /**
-     * Belirtilen tenant bağlamında callback çalıştırır, sonra temizler.
-     * Test ve CLI için kullanışlı.
+     * Belirtilen tenant bağlamında callback çalıştırır, sonra ÖNCEKİ
+     * bağlamı geri yükler (unbind değil — restore).
+     *
+     * İç içe runAs çağrılarında dış context korunur.
      */
     public static function runAs(string $tenantId, callable $fn, bool $superadmin = false): mixed
     {
+        $prevTenantId   = self::$tenantId;
+        $prevSuperadmin = self::$superadmin;
+
         self::bind($tenantId, $superadmin);
+
         try {
             return $fn();
         } finally {
-            self::unbind();
+            if ($prevTenantId === null) {
+                self::unbind();
+            } else {
+                self::bind($prevTenantId, $prevSuperadmin);
+            }
         }
     }
 }
