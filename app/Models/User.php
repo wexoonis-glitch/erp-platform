@@ -17,6 +17,7 @@ class User extends Authenticatable
         'password',
         'tenant_id',
         'role',
+	'prefences',
         'status',
     ];
 
@@ -29,7 +30,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+	    'password'          => 'hashed',
+	    'preferences'       => 'array',
         ];
     }
 

@@ -1,153 +1,145 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-bold text-slate-900">Tenants</h2>
-            <p class="mt-1 text-slate-600">{{ count($tenants) }} kiracı</p>
+            <h2 class="page-title">Tenants</h2>
+            <p class="page-subtitle">{{ count($tenants) }} kiracı</p>
         </div>
-        <button wire:click="$toggle('showCreate')"
-                class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition">
-            + Yeni Tenant
+        <button wire:click="$toggle('showCreate')" class="btn-primary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            Yeni Tenant
         </button>
     </div>
 
-    {{-- Create Form --}}
     @if($showCreate)
-        <div class="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 class="text-lg font-semibold text-slate-900 mb-4">Yeni Tenant</h3>
+        <div class="card card-body">
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">Yeni Tenant</h3>
             <form wire:submit="create" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Kod</label>
-                    <input type="text" wire:model="code" placeholder="acme-corp"
-                           class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    @error('code') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                    <label class="form-label">Kod</label>
+                    <input type="text" wire:model="code" placeholder="acme-corp" class="form-input">
+                    @error('code') <p class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Ad</label>
-                    <input type="text" wire:model="name" placeholder="Acme Corp"
-                           class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    @error('name') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                    <label class="form-label">Ad</label>
+                    <input type="text" wire:model="name" placeholder="Acme Corp" class="form-input">
+                    @error('name') <p class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Tier</label>
-                    <select wire:model="tier"
-                            class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <label class="form-label">Tier</label>
+                    <select wire:model="tier" class="form-select">
                         <option value="shared">shared</option>
                         <option value="schema">schema</option>
                         <option value="dedicated">dedicated</option>
                     </select>
                 </div>
                 <div class="sm:col-span-3 flex items-center gap-3">
-                    <button type="submit"
-                            class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition">
-                        Oluştur
-                    </button>
-                    <button type="button" wire:click="$set('showCreate', false)"
-                            class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition">
-                        İptal
-                    </button>
+                    <button type="submit" class="btn-primary">Oluştur</button>
+                    <button type="button" wire:click="$set('showCreate', false)" class="btn-secondary">İptal</button>
                 </div>
             </form>
         </div>
     @endif
 
-    {{-- Edit Modal --}}
     @if($editingId)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
-             wire:click.self="cancelEdit">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-slate-900">Tenant Düzenle</h3>
-                    <button wire:click="cancelEdit" class="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+        <div class="modal-backdrop" wire:click.self="cancelEdit">
+            <div class="modal-content max-w-lg">
+                <div class="modal-header">
+                    <h3 class="text-base font-semibold text-slate-900 dark:text-white">Tenant Düzenle</h3>
+                    <button wire:click="cancelEdit" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
-                <form wire:submit="saveEdit" class="p-6 space-y-4">
+                <form wire:submit="saveEdit" class="modal-body">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Ad</label>
-                        <input type="text" wire:model="editName"
-                               class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        @error('editName') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        <label class="form-label">Ad</label>
+                        <input type="text" wire:model="editName" class="form-input">
+                        @error('editName') <p class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Tier</label>
-                        <select wire:model="editTier"
-                                class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <label class="form-label">Tier</label>
+                        <select wire:model="editTier" class="form-select">
                             <option value="shared">shared</option>
                             <option value="schema">schema</option>
                             <option value="dedicated">dedicated</option>
                         </select>
-                        @error('editTier') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        @error('editTier') <p class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Config (JSON)</label>
-                        <textarea wire:model="editConfigJson" rows="6"
-                                  class="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  placeholder='{"currency":"TRY","timezone":"Europe/Istanbul"}'></textarea>
-                        @error('editConfigJson') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                        <label class="form-label">Config (JSON)</label>
+                        <textarea wire:model="editConfigJson" rows="6" class="form-textarea"
+                                  placeholder='{"currency":"TRY"}'></textarea>
+                        @error('editConfigJson') <p class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ $message }}</p> @enderror
                     </div>
-                    <div class="flex items-center gap-3 pt-2">
-                        <button type="submit"
-                                class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition">
-                            Kaydet
-                        </button>
-                        <button type="button" wire:click="cancelEdit"
-                                class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition">
-                            İptal
-                        </button>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn-primary">Kaydet</button>
+                        <button type="button" wire:click="cancelEdit" class="btn-secondary">İptal</button>
                     </div>
                 </form>
             </div>
         </div>
     @endif
 
-    {{-- Table --}}
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-50 border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
+    <div class="card overflow-hidden">
+        <table class="table-modern">
+            <thead>
                 <tr>
-                    <th class="px-6 py-3">Kod</th>
-                    <th class="px-6 py-3">Ad</th>
-                    <th class="px-6 py-3">Tier</th>
-                    <th class="px-6 py-3">Durum</th>
-                    <th class="px-6 py-3 text-right">İşlem</th>
+                    <th>Kod</th>
+                    <th>Ad</th>
+                    <th>Tier</th>
+                    <th>Durum</th>
+                    <th class="text-center">İşlem</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody>
                 @forelse($tenants as $t)
-                    <tr class="hover:bg-slate-50" wire:key="tenant-{{ $t['id'] }}">
-                        <td class="px-6 py-3 font-mono text-slate-700">{{ $t['code'] }}</td>
-                        <td class="px-6 py-3 font-medium text-slate-900">{{ $t['name'] }}</td>
-                        <td class="px-6 py-3 text-slate-600">{{ $t['tier'] }}</td>
-                        <td class="px-6 py-3">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {{ $t['status'] === 'active' ? 'bg-emerald-50 text-emerald-700' : ($t['status'] === 'suspended' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-700') }}">
-                                <span class="w-1.5 h-1.5 rounded-full
-                                    {{ $t['status'] === 'active' ? 'bg-emerald-500' : ($t['status'] === 'suspended' ? 'bg-amber-500' : 'bg-slate-400') }}"></span>
+                    <tr wire:key="tenant-{{ $t['id'] }}">
+                        <td class="font-mono text-xs">{{ $t['code'] }}</td>
+                        <td class="font-semibold text-slate-900 dark:text-white">{{ $t['name'] }}</td>
+                        <td>{{ $t['tier'] }}</td>
+                        <td>
+                            @php
+                                $statusBadge = match($t['status']) {
+                                    'active'    => 'badge-success',
+                                    'suspended' => 'badge-warning',
+                                    'archived'  => 'badge-muted',
+                                    default     => 'badge-muted',
+                                };
+                                $statusDot = match($t['status']) {
+                                    'active'    => 'bg-emerald-500',
+                                    'suspended' => 'bg-amber-500',
+                                    default     => 'bg-slate-400',
+                                };
+                            @endphp
+                            <span class="{{ $statusBadge }}">
+                                <span class="badge-dot {{ $statusDot }}"></span>
                                 {{ $t['status'] }}
                             </span>
                         </td>
-                        <td class="px-6 py-3 text-right">
-                            <div class="flex items-center justify-end gap-3">
-                                @if($t['status'] !== 'archived')
-                                    <button wire:click="openEdit('{{ $t['id'] }}')"
-                                            class="text-xs font-medium text-indigo-600 hover:text-indigo-800">
-                                        Düzenle
-                                    </button>
-                                    <button wire:click="toggleStatus('{{ $t['id'] }}')"
-                                            class="text-xs font-medium text-amber-600 hover:text-amber-800">
+                        <td class="text-center">
+                            @if($t['status'] !== 'archived')
+                                <div class="flex items-center justify-center gap-1">
+                                    <button wire:click="openEdit('{{ $t['id'] }}')" class="btn-ghost-primary">Düzenle</button>
+                                    <button wire:click="toggleStatus('{{ $t['id'] }}')" class="btn-ghost-warning">
                                         {{ $t['status'] === 'active' ? 'Askıya Al' : 'Aktive Et' }}
                                     </button>
                                     <button wire:click="archive('{{ $t['id'] }}')"
-                                            wire:confirm="Bu tenant'ı arşivlemek istediğinize emin misiniz? Kullanıcıları giriş yapamayacak."
-                                            class="text-xs font-medium text-rose-600 hover:text-rose-800">
-                                        Arşivle
-                                    </button>
-                                @else
-                                    <span class="text-xs text-slate-400">Arşivli</span>
-                                @endif
-                            </div>
+                                            wire:confirm="Bu tenant'ı arşivlemek istediğinize emin misiniz?"
+                                            class="btn-ghost-danger">Arşivle</button>
+                                </div>
+                            @else
+                                <span class="text-xs text-slate-400 dark:text-slate-500">Arşivli</span>
+                            @endif
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Henüz tenant yok.</td></tr>
+                    <tr><td colspan="5" class="text-center py-12">
+                        <div class="text-4xl mb-2">🏢</div>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Henüz tenant yok.</p>
+                    </td></tr>
                 @endforelse
             </tbody>
         </table>

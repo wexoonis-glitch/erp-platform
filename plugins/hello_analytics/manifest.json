@@ -1,0 +1,17 @@
+{
+  "id": "hello_analytics",
+  "name": "Hello Analytics",
+  "version": "1.0.0",
+  "vendor": "Demo Corp",
+  "description": "Kullanıcı oluşturma event'lerini loglar ve analiz eder.",
+  "namespace": "HelloAnalytics\\",
+  "requires": [],
+  "events_consumed": ["user.created"],
+  "events_published": [],
+  "extension_points_used": ["E7"],
+  "classes": {
+    "listeners": {
+      "user.created": "HelloAnalytics\\HelloAnalyticsListener"
+    }
+  }
+}

@@ -15,12 +15,31 @@ class Plugin extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'tenant_id', 'module_id', 'version', 'manifest',
-        'vendor', 'checksum', 'status', 'created_at',
+        'id',
+        'tenant_id',
+        'plugin_id',
+        'name',
+        'module_id',
+        'path',
+        'version',
+        'manifest',
+        'vendor',
+        'checksum',
+        'status',
+        'installed_at',
+        'enabled_at',
+        'created_at',
     ];
 
     protected $casts = [
-        'manifest'   => 'array',
-        'created_at' => 'datetime',
+        'manifest'     => 'array',
+        'installed_at' => 'datetime',
+        'enabled_at'   => 'datetime',
+        'created_at'   => 'datetime',
     ];
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
 }

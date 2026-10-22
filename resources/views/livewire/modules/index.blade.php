@@ -1,16 +1,13 @@
 <div class="space-y-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-2xl font-bold text-slate-900">Modüller</h2>
-            <p class="mt-1 text-slate-600">{{ count($catalog) }} katalog modülü</p>
-        </div>
+    <div>
+        <h2 class="page-title">Modüller</h2>
+        <p class="page-subtitle">{{ count($catalog) }} katalog modülü</p>
     </div>
 
     @if($isSuper)
-        <div class="bg-white rounded-xl border border-slate-200 p-4">
-            <label class="block text-sm font-medium text-slate-700 mb-1">İşlem yapılacak tenant</label>
-            <select wire:model.live="selectedTenantId"
-                    class="w-full sm:w-96 px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        <div class="card card-body">
+            <label class="form-label">İşlem yapılacak tenant</label>
+            <select wire:model.live="selectedTenantId" class="form-select sm:max-w-md">
                 <option value="">— Seçiniz —</option>
                 @foreach($tenants as $t)
                     <option value="{{ $t['id'] }}">{{ $t['code'] }} — {{ $t['name'] }}</option>
@@ -20,57 +17,67 @@
     @endif
 
     @if($errors->has('general'))
-        <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-sm text-rose-700">
+        <div class="bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-xl p-3 text-sm text-rose-700 dark:text-rose-400">
             {{ $errors->first('general') }}
         </div>
     @endif
 
-    {{-- Katalog --}}
+    @if(session('message'))
+        <div class="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3 text-sm text-emerald-700 dark:text-emerald-400">
+            {{ session('message') }}
+        </div>
+    @endif
+
     <div>
-        <h3 class="text-lg font-semibold text-slate-900 mb-3">Katalog</h3>
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
+        <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-3">Katalog</h3>
+        <div class="card overflow-hidden">
+            <table class="table-modern">
+                <thead>
                     <tr>
-                        <th class="px-6 py-3">Modül</th>
-                        <th class="px-6 py-3">Fonksiyon</th>
-                        <th class="px-6 py-3">Kurulu mu?</th>
-                        <th class="px-6 py-3 text-right">İşlem</th>
+                        <th>Modül</th>
+                        <th>Fonksiyon</th>
+                        <th>Kurulu mu?</th>
+                        <th class="text-center">İşlem</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody>
                     @foreach($catalog as $m)
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-3 font-mono font-medium text-slate-900">{{ $m['module_id'] }}</td>
-                            <td class="px-6 py-3 text-slate-600">{{ $m['function_count'] }}</td>
-                            <td class="px-6 py-3">
+                        <tr wire:key="cat-{{ $m['module_id'] }}">
+                            <td>
+                                <span class="inline-flex items-center gap-2 font-mono font-semibold text-slate-900 dark:text-white">
+                                    <span class="w-2 h-2 rounded-full bg-primary-500"></span>
+                                    {{ $m['module_id'] }}
+                                </span>
+                            </td>
+                            <td class="font-medium">{{ $m['function_count'] }}</td>
+                            <td>
                                 @if(in_array($m['module_id'], $installedCodes, true))
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
-                                        ✓ Kurulu
+                                    <span class="badge-success">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Kurulu
                                     </span>
                                 @else
-                                    <span class="text-xs text-slate-400">—</span>
+                                    <span class="text-xs text-slate-400 dark:text-slate-500">—</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-3 text-right">
+                            <td class="text-center">
                                 @if($isSuper)
                                     @if(in_array($m['module_id'], $installedCodes, true))
                                         @if($m['module_id'] !== 'PLT')
                                             <button wire:click="uninstall('{{ $m['module_id'] }}')"
-                                                    class="text-xs font-medium text-rose-600 hover:text-rose-800">
-                                                Kaldır
-                                            </button>
+                                                    wire:confirm="Modülü kaldırmak istediğinize emin misiniz?"
+                                                    class="btn-ghost-danger">Kaldır</button>
                                         @else
-                                            <span class="text-xs text-slate-400">Zorunlu</span>
+                                            <span class="text-xs text-slate-400 dark:text-slate-500">Zorunlu</span>
                                         @endif
                                     @else
                                         <button wire:click="install('{{ $m['module_id'] }}')"
-                                                class="text-xs font-medium text-indigo-600 hover:text-indigo-800">
-                                            Kur
-                                        </button>
+                                                class="btn-ghost-primary">Kur</button>
                                     @endif
                                 @else
-                                    <span class="text-xs text-slate-400">—</span>
+                                    <span class="text-xs text-slate-400 dark:text-slate-500">—</span>
                                 @endif
                             </td>
                         </tr>
@@ -80,32 +87,36 @@
         </div>
     </div>
 
-    {{-- Kurulu Modüller --}}
     @if(!empty($installed))
         <div>
-            <h3 class="text-lg font-semibold text-slate-900 mb-3">Kurulu Modüller</h3>
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
+            <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-3">Kurulu Modüller</h3>
+            <div class="card overflow-hidden">
+                <table class="table-modern">
+                    <thead>
                         <tr>
-                            <th class="px-6 py-3">Modül</th>
-                            <th class="px-6 py-3">Versiyon</th>
-                            <th class="px-6 py-3">Durum</th>
-                            <th class="px-6 py-3">Kurulum</th>
+                            <th>Modül</th>
+                            <th>Versiyon</th>
+                            <th>Durum</th>
+                            <th>Kurulum</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody>
                         @foreach($installed as $i)
-                            <tr class="hover:bg-slate-50">
-                                <td class="px-6 py-3 font-mono font-medium text-slate-900">{{ $i['module_id'] }}</td>
-                                <td class="px-6 py-3 text-slate-600">{{ $i['version'] }}</td>
-                                <td class="px-6 py-3">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <tr wire:key="inst-{{ $i['module_id'] }}">
+                                <td>
+                                    <span class="inline-flex items-center gap-2 font-mono font-semibold text-slate-900 dark:text-white">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        {{ $i['module_id'] }}
+                                    </span>
+                                </td>
+                                <td class="text-sm">{{ $i['version'] }}</td>
+                                <td>
+                                    <span class="badge-success">
+                                        <span class="badge-dot bg-emerald-500"></span>
                                         {{ $i['status'] }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-3 text-xs text-slate-500">{{ $i['installed_at'] }}</td>
+                                <td class="text-xs text-slate-500 dark:text-slate-400">{{ $i['installed_at'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
