@@ -1,0 +1,92 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pgsql, pdo_pgsql, redis, bcmath, gd, zip
+          coverage: none
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Create erp_app role and test database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -c "CREATE ROLE erp_app WITH LOGIN CREATEDB PASSWORD 'test';"
+          psql -h 127.0.0.1 -U postgres -c "CREATE DATABASE erp_test OWNER erp_app;"
+          psql -h 127.0.0.1 -U postgres -d erp_test -c "GRANT ALL ON SCHEMA public TO erp_app;"
+
+      - name: Copy .env.testing.example to .env
+        run: cp .env.testing.example .env
+
+      - name: Configure .env for CI
+        run: |
+          sed -i 's|^DB_HOST=.*|DB_HOST=127.0.0.1|' .env
+          sed -i 's|^DB_PORT=.*|DB_PORT=5432|' .env
+          sed -i 's|^DB_DATABASE=.*|DB_DATABASE=erp_test|' .env
+          sed -i 's|^DB_USERNAME=.*|DB_USERNAME=erp_app|' .env
+          sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=test|' .env
+          sed -i 's|^REDIS_HOST=.*|REDIS_HOST=127.0.0.1|' .env
+
+      - name: Generate APP_KEY
+        run: php artisan key:generate
+
+      - name: Run tests
+        run: php artisan test

@@ -1,9 +1,10 @@
 <?php
-
 namespace App\Livewire\CustomFields;
 
 use App\Models\CustomField;
+use App\Models\CustomObject;
 use App\Models\Tenant;
+use App\Support\CustomFieldEntities;
 use App\Support\TenantContext;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -14,8 +15,6 @@ use Livewire\Component;
 class Index extends Component
 {
     private const NULL_TENANT = '00000000-0000-0000-0000-000000000000';
-
-    private const BUILTIN_ENTITIES = ['tenant', 'user', 'ap_invoice', 'ar_invoice', 'sales_order', 'purchase_order', 'inventory_item'];
 
     public bool $showCreate = false;
 
@@ -32,13 +31,14 @@ class Index extends Component
     public string $data_type = 'string';
 
     public string $enum_options = '';
+    public bool $is_required = false;
 
     public string $tenant_id = '';
 
-    // Edit state
     public ?string $editingId = null;
     public string $editLabel = '';
     public string $editEnumOptions = '';
+    public bool $editIsRequired = false;
 
     public function mount()
     {
@@ -51,37 +51,51 @@ class Index extends Component
         }
     }
 
+    private function entityList(): array
+    {
+        // Sabitler + bu tenant'a özel custom object kodları
+        $list = CustomFieldEntities::LIST;
+
+        if ($this->tenant_id) {
+            $customObjects = TenantContext::runAs(
+                $this->tenant_id,
+                fn() => CustomObject::orderBy('code')->get(['code', 'label'])->toArray()
+            );
+            foreach ($customObjects as $co) {
+                $list[$co['code']] = $co['label'] . ' (custom object)';
+            }
+        }
+
+        return $list;
+    }
+
     public function create()
     {
         $this->validate();
 
         $actor = Auth::user();
         $actorIsSuper = $actor->isSuperadmin();
-
         $targetTenantId = $actorIsSuper ? $this->tenant_id : $actor->tenant_id;
         if (empty($targetTenantId)) {
             $this->addError('tenant_id', 'Tenant seçmelisiniz.');
             return;
         }
 
-        if (!in_array($this->entity, self::BUILTIN_ENTITIES, true)) {
-            $objExists = TenantContext::runAs($targetTenantId, function () {
-                return \App\Models\CustomObject::where('code', $this->entity)->exists();
-            });
-            if (!$objExists) {
-                $this->addError('entity', "Bilinmeyen entity: {$this->entity}");
-                return;
-            }
+        // Entity geçerli mi?
+        $validEntities = array_keys($this->entityList());
+        if (!in_array($this->entity, $validEntities, true)) {
+            $this->addError('entity', "Bilinmeyen entity: {$this->entity}");
+            return;
         }
 
-        $config = [];
+        $config = ['required' => $this->is_required];
         if ($this->data_type === 'enum') {
             $opts = array_filter(array_map('trim', explode(',', $this->enum_options)));
             if (empty($opts)) {
                 $this->addError('enum_options', 'En az bir seçenek girin (virgülle ayrılmış).');
                 return;
             }
-            $config = ['options' => array_values($opts)];
+            $config['options'] = array_values($opts);
         }
 
         $exists = TenantContext::runAs($targetTenantId, function () {
@@ -104,12 +118,9 @@ class Index extends Component
             ]);
         });
 
-        $this->reset(['entity', 'code', 'label', 'data_type', 'enum_options', 'showCreate']);
-        if ($actorIsSuper) {
-            $this->reset('tenant_id');
-        } else {
-            $this->tenant_id = $actor->tenant_id;
-        }
+        $this->reset(['entity', 'code', 'label', 'data_type', 'enum_options', 'is_required', 'showCreate']);
+        if ($actorIsSuper) $this->reset('tenant_id');
+        else $this->tenant_id = $actor->tenant_id;
     }
 
     public function openEdit(string $id)
@@ -117,18 +128,14 @@ class Index extends Component
         $f = CustomField::findOrFail($id);
         $this->editingId = $f->id;
         $this->editLabel = $f->label;
-        $this->editEnumOptions = '';
-        if ($f->data_type === 'enum') {
-            $this->editEnumOptions = implode(', ', $f->config['options'] ?? []);
-        }
+        $this->editIsRequired = (bool) ($f->config['required'] ?? false);
+        $this->editEnumOptions = $f->data_type === 'enum' ? implode(', ', $f->config['options'] ?? []) : '';
         $this->resetErrorBag();
     }
 
     public function cancelEdit()
     {
-        $this->editingId = null;
-        $this->editLabel = '';
-        $this->editEnumOptions = '';
+        $this->reset(['editingId', 'editLabel', 'editEnumOptions', 'editIsRequired']);
         $this->resetErrorBag();
     }
 
@@ -141,13 +148,15 @@ class Index extends Component
         $f = CustomField::findOrFail($this->editingId);
 
         $config = $f->config ?? [];
+        $config['required'] = $this->editIsRequired;
+
         if ($f->data_type === 'enum') {
             $opts = array_filter(array_map('trim', explode(',', $this->editEnumOptions)));
             if (empty($opts)) {
                 $this->addError('editEnumOptions', 'En az bir seçenek girin.');
                 return;
             }
-            $config = ['options' => array_values($opts)];
+            $config['options'] = array_values($opts);
         }
 
         $f->label = $this->editLabel;
@@ -177,16 +186,15 @@ class Index extends Component
             $tenants = TenantContext::runAs(
                 self::NULL_TENANT,
                 fn() => Tenant::orderBy('code')->get(['id', 'code', 'name'])->toArray(),
-                superadmin: true
+                true
             );
         }
 
         return view('livewire.custom-fields.index', [
-            'title'    => 'Custom Fields',
             'isSuper'  => $isSuper,
             'fields'   => $fields,
             'tenants'  => $tenants,
-            'entities' => self::BUILTIN_ENTITIES,
-        ]);
+            'entities' => $this->entityList(),
+        ])->layout('layouts.app', ['title' => 'Custom Fields']);
     }
 }

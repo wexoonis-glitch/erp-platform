@@ -1,7 +1,6 @@
 @php
     $user = auth()->user();
-    $currentTheme = 'system';
-    $currentColor = 'indigo';
+    $unreadCount = \App\Models\SysNotification::where('user_id', auth()->id())->where('is_read', false)->count();
 @endphp
 
 <header class="h-16 flex items-center justify-between px-4 sm:px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30">
@@ -30,13 +29,17 @@
             </svg>
         </button>
 
-        {{-- Notification (placeholder) --}}
-        <button type="button" class="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative">
+        {{-- Bildirimler --}}
+        <a href="{{ route('notifications.index') }}" class="relative p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Bildirimler">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
             </svg>
-            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900"></span>
-        </button>
+            @if($unreadCount > 0)
+                <span class="absolute top-0.5 right-0.5 flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white bg-rose-500 rounded-full border border-white dark:border-slate-900">
+                    {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                </span>
+            @endif
+        </a>
 
         {{-- Divider --}}
         <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>

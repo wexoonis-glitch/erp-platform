@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // FOUC önleme — sayfa render edilmeden önce tema uygula
         (function() {
             const theme = localStorage.getItem('erp_theme') || 'system';
             const color = localStorage.getItem('erp_color') || 'indigo';
@@ -24,6 +24,12 @@
     @livewireStyles
 </head>
 <body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans">
+@if(session("module_blocked"))
+    <div class="mx-4 mt-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-xl p-3 text-sm text-amber-700 dark:text-amber-400">
+        {{ session("module_blocked") }}
+    </div>
+@endif
+
     <div class="min-h-full flex">
         @include('layouts.partials.sidebar')
 
@@ -31,13 +37,21 @@
             @include('layouts.partials.topbar')
 
             <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scrollbar-thin">
+    @if(session('feature_disabled'))
+        <div id="feature-flash" style="position:fixed;top:70px;right:20px;z-index:100000;background:#f59e0b;color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:14px;max-width:400px;">
+            ⚠️ Bu özellik devre dışı: <strong>{{ session('feature_disabled') }}</strong>
+        </div>
+        <script>setTimeout(()=>document.getElementById('feature-flash')?.remove(),5000)</script>
+    @endif
+
                 {{ $slot }}
             </main>
         </div>
     </div>
 
     @include('layouts.partials.theme-panel')
-
+    
+    @stack('scripts')
     @livewireScripts
 </body>
 </html>
